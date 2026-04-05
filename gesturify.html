@@ -1321,7 +1321,8 @@ function initPractice() {
   const video = document.getElementById('video');
   navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-  socket = new WebSocket('ws://' + window.location.host + '/ws');
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  socket = new WebSocket(protocol + '//' + window.location.host + '/ws');
   function setWS(open) {
     ['ws-dot','ws-dot-2'].forEach(id => { document.getElementById(id).className = 'ws-dot' + (open ? ' on' : ''); });
     const lbl = open ? 'Connected' : 'Disconnected';
@@ -1553,7 +1554,8 @@ function initAdvancedCam() {
   navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
   if (advSocket) advSocket.close();
-  advSocket = new WebSocket('ws://' + window.location.host + '/ws');
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  advSocket = new WebSocket(protocol + '//' + window.location.host + '/ws');
   advSocket.onopen = () => {
     ['ws-dot'].forEach(id => document.getElementById(id).className = 'ws-dot on');
     document.getElementById('ws-label').textContent = 'Connected';
