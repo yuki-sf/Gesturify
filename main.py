@@ -11,6 +11,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import tensorflow as tf
+# Limit TensorFlow to 1 CPU thread to prevent Render from freezing
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
+
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 app = FastAPI()
@@ -99,12 +104,18 @@ async def get():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    print("New WebSocket connection established")
     try:
         while True:
             data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+                continue
+            if len(data) < 100:
+                continue
             result = process_frame(data)
             await websocket.send_text(result)
     except WebSocketDisconnect:
-        print("Client disconnected")
+        print("Client disconnected normally")
     except Exception as e:
         print(f"WebSocket Error: {e}")

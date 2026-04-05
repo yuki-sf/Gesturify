@@ -1095,6 +1095,13 @@ function saveSetting(k, v) {
       const el = document.getElementById(id);
       if (el) el.textContent = label;
     });
+    // Restart frame loops at the new rate immediately
+    if (typeof window._restartPracticeFrameLoop === 'function') {
+      window._restartPracticeFrameLoop();
+    }
+    if (typeof window._restartAdvFrameLoop === 'function') {
+      window._restartAdvFrameLoop();
+    }
   }
 }
 
@@ -1321,39 +1328,84 @@ function initPractice() {
   const video = document.getElementById('video');
   navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  socket = new WebSocket(protocol + '//' + window.location.host + '/ws');
+
+  let pingInterval = null;
+  let reconnectTimeout = null;
+  let intentionallyClosed = false;
+
   function setWS(open) {
     ['ws-dot','ws-dot-2'].forEach(id => { document.getElementById(id).className = 'ws-dot' + (open ? ' on' : ''); });
     const lbl = open ? 'Connected' : 'Disconnected';
     document.getElementById('ws-label').textContent = lbl;
     document.getElementById('ws-label-2').textContent = lbl;
   }
-  socket.onopen  = () => setWS(true);
-  socket.onclose = () => setWS(false);
-  socket.onerror = () => { document.getElementById('ws-label-2').textContent = 'Error'; };
-  setInterval(() => {
-    if (socket && socket.readyState === WebSocket.OPEN && video.videoWidth) {
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
-      socket.send(canvas.toDataURL('image/jpeg', 0.5));
-    }
-  }, S.fps);
-  socket.onmessage = ev => {
-    const raw = ev.data.trim(), noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
-    document.getElementById('det-char').textContent = noHand ? '∅' : raw;
-    document.getElementById('det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
-    if (!noHand && !lockInput && raw === currentTarget) {
-      lockInput = true; score++; streak++;
-      sessionDone.add(currentTarget);
-      recordAcc(practiceStats, currentTarget, true); savePracStats();
-      document.getElementById('score-val').textContent  = score;
-      document.getElementById('streak-val').textContent = streak;
-      showFeedback(true, raw); updateProgGrid();
-      addHistory({ type: 'practice', label: raw, result: 'correct' });
-    }
-    if (noHand) { streak = 0; document.getElementById('streak-val').textContent = 0; }
-  };
+
+  function connectPracticeSocket() {
+    if (intentionallyClosed) return;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    socket = new WebSocket(protocol + '//' + window.location.host + '/ws');
+
+    socket.onopen = () => {
+      setWS(true);
+      // Keep-alive: ping every 25 s to prevent Render's idle timeout
+      if (pingInterval) clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send('ping');
+        }
+      }, 25000);
+    };
+
+    socket.onclose = () => {
+      setWS(false);
+      if (pingInterval) { clearInterval(pingInterval); pingInterval = null; }
+      // Auto-reconnect after 2 s unless we closed it on purpose
+      if (!intentionallyClosed) {
+        document.getElementById('ws-label-2').textContent = 'Reconnecting…';
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(connectPracticeSocket, 2000);
+      }
+    };
+
+    socket.onerror = () => {
+      document.getElementById('ws-label-2').textContent = 'Connection error';
+    };
+
+    socket.onmessage = ev => {
+      const raw = ev.data.trim();
+      // Ignore pong/ping echo from server
+      if (raw === 'pong' || raw === 'ping') return;
+      const noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
+      document.getElementById('det-char').textContent = noHand ? '∅' : raw;
+      document.getElementById('det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
+      if (!noHand && !lockInput && raw === currentTarget) {
+        lockInput = true; score++; streak++;
+        sessionDone.add(currentTarget);
+        recordAcc(practiceStats, currentTarget, true); savePracStats();
+        document.getElementById('score-val').textContent  = score;
+        document.getElementById('streak-val').textContent = streak;
+        showFeedback(true, raw); updateProgGrid();
+        addHistory({ type: 'practice', label: raw, result: 'correct' });
+      }
+      if (noHand) { streak = 0; document.getElementById('streak-val').textContent = 0; }
+    };
+  }
+
+  connectPracticeSocket();
+
+  // Frame-sending loop — stored globally so fps changes can restart it live
+  function startPracticeFrameLoop() {
+    if (window._practiceFrameInterval) clearInterval(window._practiceFrameInterval);
+    window._practiceFrameInterval = setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN && video.videoWidth) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
+        socket.send(canvas.toDataURL('image/jpeg', 0.5));
+      }
+    }, S.fps);
+  }
+  window._restartPracticeFrameLoop = startPracticeFrameLoop;
+  startPracticeFrameLoop();
 }
 
 /* ════════════════════════════════════════
@@ -1553,35 +1605,89 @@ function initAdvancedCam() {
   const video = document.getElementById('adv-video');
   navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-  if (advSocket) advSocket.close();
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  advSocket = new WebSocket(protocol + '//' + window.location.host + '/ws');
-  advSocket.onopen = () => {
-    ['ws-dot'].forEach(id => document.getElementById(id).className = 'ws-dot on');
-    document.getElementById('ws-label').textContent = 'Connected';
-  };
-  setInterval(() => {
-    if (advSocket && advSocket.readyState === WebSocket.OPEN && video.videoWidth && document.getElementById('page-quiz').classList.contains('active')) {
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
-      advSocket.send(canvas.toDataURL('image/jpeg', 0.5));
-    }
-  }, 200);
-  advSocket.onmessage = ev => {
-    const raw = ev.data.trim(), noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
-    document.getElementById('adv-det-char').textContent = noHand ? '∅' : raw;
-    document.getElementById('adv-det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
-    if (!noHand && !advLocked) {
-      const target = qQueue[qIdx];
-      if (raw === target) {
-        advLocked = true; qCorrect++;
-        playSuccessTone();
-        recordAcc(quizStats, target, true); saveQuizStats();
-        showAdvFb(true, target);
-        document.getElementById('adv-next').classList.add('show');
-        addHistory({ type: 'quiz', level: 'advanced', label: target, result: 'correct' });
+  if (advSocket) { advSocket.close(); advSocket = null; }
+
+  let advPingInterval = null;
+  let advReconnectTimeout = null;
+  let advIntentionallyClosed = false;
+
+  function connectAdvSocket() {
+    if (advIntentionallyClosed) return;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    advSocket = new WebSocket(protocol + '//' + window.location.host + '/ws');
+
+    advSocket.onopen = () => {
+      ['ws-dot'].forEach(id => document.getElementById(id).className = 'ws-dot on');
+      document.getElementById('ws-label').textContent = 'Connected';
+      // Keep-alive ping every 25 s
+      if (advPingInterval) clearInterval(advPingInterval);
+      advPingInterval = setInterval(() => {
+        if (advSocket && advSocket.readyState === WebSocket.OPEN) {
+          advSocket.send('ping');
+        }
+      }, 25000);
+    };
+
+    advSocket.onclose = () => {
+      ['ws-dot'].forEach(id => document.getElementById(id).className = 'ws-dot');
+      if (advPingInterval) { clearInterval(advPingInterval); advPingInterval = null; }
+      if (!advIntentionallyClosed) {
+        if (advReconnectTimeout) clearTimeout(advReconnectTimeout);
+        advReconnectTimeout = setTimeout(connectAdvSocket, 2000);
       }
-    }
+    };
+
+    advSocket.onerror = () => {};
+
+    advSocket.onmessage = ev => {
+      const raw = ev.data.trim();
+      // Ignore ping/pong echo
+      if (raw === 'pong' || raw === 'ping') return;
+      const noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
+      document.getElementById('adv-det-char').textContent = noHand ? '∅' : raw;
+      document.getElementById('adv-det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
+      if (!noHand && !advLocked) {
+        const target = qQueue[qIdx];
+        if (raw === target) {
+          advLocked = true; qCorrect++;
+          playSuccessTone();
+          recordAcc(quizStats, target, true); saveQuizStats();
+          showAdvFb(true, target);
+          document.getElementById('adv-next').classList.add('show');
+          addHistory({ type: 'quiz', level: 'advanced', label: target, result: 'correct' });
+        }
+      }
+    };
+  }
+
+  // Store cleanup so quitQuiz can fully tear down
+  window._advCleanup = () => {
+    advIntentionallyClosed = true;
+    if (advPingInterval) { clearInterval(advPingInterval); advPingInterval = null; }
+    if (advReconnectTimeout) { clearTimeout(advReconnectTimeout); advReconnectTimeout = null; }
+    if (advSocket) { advSocket.close(); advSocket = null; }
+  };
+
+  connectAdvSocket();
+
+  function startAdvFrameLoop() {
+    if (window._advFrameInterval) clearInterval(window._advFrameInterval);
+    window._advFrameInterval = setInterval(() => {
+      if (advSocket && advSocket.readyState === WebSocket.OPEN && video.videoWidth && document.getElementById('page-quiz').classList.contains('active')) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
+        advSocket.send(canvas.toDataURL('image/jpeg', 0.5));
+      }
+    }, S.fps);
+  }
+  window._restartAdvFrameLoop = startAdvFrameLoop;
+  startAdvFrameLoop();
+
+  // Include frame interval in cleanup
+  const _origCleanup = window._advCleanup;
+  window._advCleanup = () => {
+    if (window._advFrameInterval) { clearInterval(window._advFrameInterval); window._advFrameInterval = null; }
+    _origCleanup();
   };
 }
 function showAdvFb(ok, correct) {
@@ -1620,7 +1726,8 @@ function endQuiz() {
   addHistory({ type: 'quiz', level: qLevel, score: qCorrect, total: n });
 }
 function quitQuiz() {
-  if (advSocket) { advSocket.close(); advSocket = null; }
+  if (typeof window._advCleanup === 'function') { window._advCleanup(); }
+  else if (advSocket) { advSocket.close(); advSocket = null; }
   showQuizLobby();
 }
 
