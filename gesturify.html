@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gesturify — ISL Sign Language</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e8c547'/%3E%3Cg stroke='%2309090b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'%3E%3Cpath d='M21 13V9a2 2 0 0 0-4 0v5'/%3E%3Cpath d='M17 12V6a2 2 0 0 0-4 0v3'/%3E%3Cpath d='M13 12.5V9a2 2 0 0 0-4 0v9'/%3E%3Cpath d='M21 11a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L10 17'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#09090b;--surface:#111114;--surface-2:#18181c;--surface-3:#202025;
+  --border:rgba(255,255,255,.055);--border-md:rgba(255,255,255,.10);--border-hi:rgba(255,255,255,.18);
+  --text:#edeae4;--text-muted:rgba(237,234,228,.38);--text-dim:rgba(237,234,228,.60);
+  --accent:#e8c547;--accent-dim:rgba(232,197,71,.11);--accent-glow:rgba(232,197,71,.06);--accent-border:rgba(232,197,71,.30);
+  --green:#4dde87;--green-dim:rgba(77,222,135,.12);--green-border:rgba(77,222,135,.30);
+  --red:#e05555;--red-dim:rgba(224,85,85,.12);--red-border:rgba(224,85,85,.30);
+  --blue:#5a9cf8;--blue-dim:rgba(90,156,248,.10);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.10);
+  --orange:#f59e0b;--orange-dim:rgba(245,158,11,.10);--orange-border:rgba(245,158,11,.28);
+  --sidebar-w:224px;--wm-bg:rgba(9,9,11,.72);
+}
+[data-theme="light"]{
+  --bg:#f4f2ee;--surface:#fff;--surface-2:#eeebe6;--surface-3:#e4e1da;
+  --border:rgba(0,0,0,.07);--border-md:rgba(0,0,0,.12);--border-hi:rgba(0,0,0,.22);
+  --text:#1a1814;--text-muted:rgba(26,24,20,.40);--text-dim:rgba(26,24,20,.62);
+  --accent:#b8920e;--accent-dim:rgba(184,146,14,.10);--accent-glow:rgba(184,146,14,.05);--accent-border:rgba(184,146,14,.30);
+  --green:#1a8c49;--green-dim:rgba(26,140,73,.10);--green-border:rgba(26,140,73,.28);
+  --red:#c73c3c;--red-dim:rgba(199,60,60,.10);--red-border:rgba(199,60,60,.28);
+  --blue:#1d4ed8;--blue-dim:rgba(29,78,216,.09);
+  --purple:#6d28d9;--purple-dim:rgba(109,40,217,.09);
+  --orange:#b45309;--orange-dim:rgba(180,83,9,.10);--orange-border:rgba(180,83,9,.28);
+  --wm-bg:rgba(255,255,255,.82);
+}
+
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;transition:background .22s,color .22s}
+
+/* ── CUSTOM SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-hi)}
+*{scrollbar-width:thin;scrollbar-color:var(--border-md) transparent}
+
+/* ── SIDEBAR ── */
+aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0 16px;transition:background .22s,border-color .22s,transform .28s,width .28s,min-width .28s}
+
+/* Sidebar collapsed state */
+aside.collapsed{width:56px;min-width:56px}
+
+/* hide labels, pills, sections, theme row, footer text */
+aside.collapsed .nav-lbl,
+aside.collapsed .nav-pill,
+aside.collapsed .nav-section,
+aside.collapsed .logo-row>div:last-child,
+aside.collapsed .theme-row,
+aside.collapsed .ws-row span{display:none}
+
+/* logo: gem only, centred */
+aside.collapsed .logo{padding:0 0 14px;display:flex;justify-content:center;border-bottom:1px solid var(--border)}
+aside.collapsed .logo-row{justify-content:center}
+
+/* nav: icon-only, centred */
+aside.collapsed nav{padding:0 6px}
+aside.collapsed .nav-btn{justify-content:center;padding:10px 0;gap:0}
+aside.collapsed .nav-btn svg{width:18px;height:18px}
+
+/* footer: just the dot */
+aside.collapsed .sidebar-btm{display:flex;padding:10px 0;justify-content:center;border-top:1px solid var(--border);margin-top:6px}
+aside.collapsed .ws-row{justify-content:center}
+
+/* Sidebar toggle button */
+.sidebar-toggle{position:absolute;top:18px;right:-13px;width:26px;height:26px;background:var(--surface);border:1px solid var(--border-md);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;transition:background .15s,border-color .15s;flex-shrink:0}
+.sidebar-toggle:hover{background:var(--surface-2);border-color:var(--border-hi)}
+.sidebar-toggle svg{width:12px;height:12px;color:var(--text-muted);transition:transform .28s}
+aside.collapsed .sidebar-toggle svg{transform:rotate(180deg)}
+.sidebar-positioner{position:relative;flex-shrink:0;display:flex}
+
+/* Mobile overlay */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;backdrop-filter:blur(2px)}
+.sidebar-overlay.open{display:block}
+
+/* Mobile topbar */
+.mobile-topbar{display:none;height:52px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 16px;gap:12px;flex-shrink:0;position:relative;z-index:10}
+.mobile-topbar .logo-gem{width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.mobile-topbar .logo-gem svg{width:16px;height:16px}
+.mobile-topbar-name{font-size:14px;font-weight:500;letter-spacing:-.01em;flex:1}
+.mob-menu-btn{width:32px;height:32px;background:none;border:1px solid var(--border-md);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mob-menu-btn svg{width:15px;height:15px;color:var(--text-dim)}
+.logo{padding:0 16px 18px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-gem{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .22s}
+.logo-gem svg{width:18px;height:18px}
+.logo-name{font-size:15px;font-weight:500;letter-spacing:-.01em}
+.logo-tag{font-size:9.5px;color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;margin-top:1px}
+nav{flex:1;padding:0 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-section{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);padding:12px 10px 4px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:400;cursor:pointer;text-align:left;width:100%;transition:background .13s,color .13s}
+.nav-btn:hover{background:var(--surface-2);color:var(--text)}
+.nav-btn.active{background:var(--accent-dim);color:var(--accent);font-weight:500}
+.nav-btn svg{width:15px;height:15px;flex-shrink:0}
+.nav-pill{margin-left:auto;font-size:9px;font-family:'DM Mono',monospace;border-radius:20px;padding:2px 7px;background:var(--accent-dim);color:var(--accent)}
+.nav-pill.blue{background:var(--blue-dim);color:var(--blue)}
+.nav-pill.purple{background:var(--purple-dim);color:var(--purple)}
+.nav-pill.orange{background:var(--orange-dim);color:var(--orange)}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;border-top:1px solid var(--border);margin-top:6px}
+.theme-lbl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)}
+.theme-lbl svg{width:13px;height:13px}
+.tog{position:relative;width:36px;height:20px;cursor:pointer}
+.tog-track{position:absolute;inset:0;background:var(--surface-3);border:1px solid var(--border-md);border-radius:20px;transition:background .2s,border-color .2s}
+.tog-thumb{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--text-muted);transition:transform .2s,background .2s}
+[data-theme="light"] .tog-thumb{transform:translateX(16px);background:var(--accent)}
+[data-theme="light"] .tog-track{background:var(--accent-dim);border-color:var(--accent-border)}
+.sidebar-btm{padding:10px 16px 0;border-top:1px solid var(--border);margin-top:6px}
+.ws-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)}
+.ws-dot{width:6px;height:6px;border-radius:50%;background:var(--red);transition:background .3s,box-shadow .3s;flex-shrink:0}
+.ws-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* ── MAIN ── */
+main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background .22s;min-width:0}
+.main-body{flex:1;display:flex;flex-direction:row;overflow:hidden;position:relative}
+.page{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.page.active{display:flex}
+.page-wrap{padding:36px 48px 52px;width:100%}
+.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:14px}
+.card-base{background:var(--surface);border:1px solid var(--border);border-radius:13px}
+.card-lbl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-family:'DM Mono',monospace}
+
+/* ── HOME ── */
+.hero-title{font-size:48px;font-weight:300;line-height:1.1;letter-spacing:-.028em;margin-bottom:18px}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-desc{font-size:15px;color:var(--text-dim);line-height:1.8;max-width:480px;margin-bottom:36px}
+.btn-row{display:flex;gap:10px;margin-bottom:48px;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#09090b;border:none;padding:11px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s,transform .12s}
+.btn-primary:hover{opacity:.84;transform:translateY(-1px)}
+.btn-primary svg{width:15px;height:15px}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--text-dim);border:1px solid var(--border-md);padding:11px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text);border-color:var(--border-hi)}
+.btn-ghost svg{width:15px;height:15px}
+.home-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:44px}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:border-color .2s,background .2s}
+.home-card:hover{border-color:var(--border-hi);background:var(--surface-2)}
+.home-card.hi{border-color:var(--accent-border);background:var(--accent-glow)}
+.home-card.hi:hover{border-color:rgba(232,197,71,.5)}
+.hc-icon{font-size:22px;margin-bottom:12px}
+.hc-title{font-size:13.5px;font-weight:500;margin-bottom:5px}
+.hc-desc{font-size:12px;color:var(--text-muted);line-height:1.6}
+.divider{border:none;border-top:1px solid var(--border);margin:0 0 28px}
+.stat-row{display:flex;gap:44px}
+.stat-num{font-family:'DM Mono',monospace;font-size:30px;font-weight:500}
+.stat-lbl{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+
+/* ── PRACTICE ── */
+.practice-layout{display:flex;gap:24px;align-items:flex-start}
+.vid-side{flex-shrink:0}
+.video-frame{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#000;width:500px}
+.video-frame video{display:block;transform:scaleX(-1);width:500px;height:375px;object-fit:cover}
+.video-flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .1s;border-radius:14px}
+.video-flash.green{background:rgba(77,222,135,.18)}
+.video-flash.show{opacity:1}
+
+/* ── HINT OVERLAY ── */
+.hint-overlay{
+  position:absolute;bottom:10px;right:10px;
+  width:96px;height:96px;
+  border-radius:10px;overflow:hidden;
+  cursor:pointer;
+  opacity:0;pointer-events:none;
+  transform:translateY(6px);
+  transition:opacity .4s ease,transform .4s ease;
+  border:1.5px solid rgba(255,255,255,.18);
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.hint-overlay.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+.hint-overlay:hover{border-color:var(--accent-border)}
+.hint-img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  filter:blur(1.5px) brightness(.7);
+  transition:filter .25s;
+}
+.hint-overlay:hover .hint-img{filter:blur(0px) brightness(.85)}
+.hint-label{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(9,9,11,.72);
+  backdrop-filter:blur(4px);
+  padding:4px 6px;
+  font-size:9px;font-family:'DM Mono',monospace;color:rgba(255,255,255,.75);
+  display:flex;align-items:center;gap:4px;justify-content:center;
+  letter-spacing:.03em;
+}
+/* hint timer ring on the target char */
+.target-char{position:relative}
+.hint-timer-ring{
+  position:absolute;inset:-5px;border-radius:18px;
+  border:2px solid transparent;
+  transition:border-color .3s;
+  pointer-events:none;
+}
+.hint-timer-ring.ticking{border-color:var(--orange-border)}
+.vbadges{position:absolute;top:10px;left:10px;display:flex;gap:6px}
+.vbadge{background:rgba(9,9,11,.70);backdrop-filter:blur(6px);border:1px solid var(--border-md);border-radius:20px;padding:3px 10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--text-dim);display:flex;align-items:center;gap:5px}
+.rec-blink{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.ws-mini{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-top:8px}
+.practice-side{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.target-char{width:84px;height:84px;flex-shrink:0;background:var(--surface-2);border:1px solid var(--accent-border);border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:50px;font-weight:500;color:var(--accent)}
+.target-char.pulse{animation:charPulse .38s ease}
+@keyframes charPulse{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
+.feedback-strip{border-radius:9px;padding:11px 14px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;opacity:0;transform:translateY(4px);transition:opacity .18s,transform .18s;border:1px solid transparent}
+.feedback-strip.show{opacity:1;transform:translateY(0)}
+.feedback-strip.correct{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.feedback-strip.wrong{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.feedback-strip svg{width:15px;height:15px;flex-shrink:0}
+.det-char{width:50px;height:50px;background:var(--surface-2);border:1px solid var(--border-md);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:24px;color:var(--text);flex-shrink:0}
+.det-title{font-size:10.5px;color:var(--text-muted);margin-bottom:3px}
+.det-name{font-size:13.5px;font-weight:500}
+.prog-title{font-size:11px;font-weight:500;color:var(--text-dim);margin-bottom:10px}
+.prog-grid{display:flex;flex-wrap:wrap;gap:4px}
+.prog-chip{width:26px;height:26px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text-muted);transition:background .2s,border-color .2s,color .2s}
+.prog-chip.done{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.prog-chip.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent)}
+.btn-sm{display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border-md);padding:7px 13px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:color .13s,border-color .13s}
+.btn-sm:hover{color:var(--text);border-color:var(--border-hi)}
+.btn-sm svg{width:12px;height:12px}
+
+/* ── LEARN ── */
+.learn-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 20px}
+.search-wrap{position:relative;flex:1;min-width:160px;max-width:280px}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text-muted);pointer-events:none}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border-md);border-radius:8px;padding:8px 12px 8px 32px;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text);outline:none;transition:border-color .15s}
+.search-input::placeholder{color:var(--text-muted)}
+.search-input:focus{border-color:var(--accent-border)}
+.filter-tabs{display:flex;gap:4px}
+.filter-tab{padding:7px 13px;border-radius:7px;font-size:12.5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .13s,color .13s,border-color .13s}
+.filter-tab.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent)}
+.filter-tab:hover:not(.active){background:var(--surface-2);color:var(--text)}
+.learn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.sign-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .18s,transform .15s}
+.sign-card:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.sign-img-wrap{width:100%;aspect-ratio:1;background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.sign-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.sign-img-placeholder{font-size:36px;color:var(--text-muted);font-family:'DM Mono',monospace}
+.card-wm{position:absolute;bottom:7px;right:7px;width:24px;height:24px;background:var(--wm-bg);backdrop-filter:blur(4px);border-radius:6px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.card-wm svg{width:13px;height:13px}
+.sign-footer{padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+.sign-label{font-family:'DM Mono',monospace;font-size:16px;font-weight:500}
+.sign-type{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);background:var(--surface-3);padding:2px 7px;border-radius:4px}
+
+/* ── QUIZ ── */
+.quiz-lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;text-align:center}
+.quiz-lobby h2{font-size:28px;font-weight:300;letter-spacing:-.02em;margin-bottom:10px}
+.quiz-lobby p{font-size:14px;color:var(--text-muted);max-width:420px;line-height:1.7;margin-bottom:36px}
+.level-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:0}
+.level-card{width:200px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 20px;cursor:pointer;text-align:left;transition:border-color .2s,transform .15s,background .2s;position:relative}
+.level-card:hover{border-color:var(--border-hi);transform:translateY(-2px);background:var(--surface-2)}
+.level-card.beginner{border-color:var(--green-border)}
+.level-card.intermediate{border-color:var(--orange-border)}
+.level-card.advanced{border-color:rgba(167,139,250,.35)}
+.lc-icon{font-size:28px;margin-bottom:14px}
+.lc-name{font-size:15px;font-weight:500;margin-bottom:6px}
+.lc-desc{font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:14px}
+.lc-tag{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:20px;letter-spacing:.04em}
+.lc-tag.green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.lc-tag.orange{background:var(--orange-dim);color:var(--orange);border:1px solid var(--orange-border)}
+.lc-tag.purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+
+/* quiz game area */
+.quiz-game{display:none;flex-direction:column;flex:1;padding:36px 48px 48px}
+.quiz-game.active{display:flex}
+.quiz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.quiz-top h3{font-size:20px;font-weight:400;letter-spacing:-.01em}
+.quiz-meta{display:flex;gap:16px;align-items:center}
+.qmeta-chip{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
+.qmeta-chip span{color:var(--text)}
+.quiz-progress-bar{height:3px;background:var(--surface-3);border-radius:2px;margin-bottom:28px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+
+/* beginner: MCQ layout */
+.mcq-layout{display:flex;gap:32px;align-items:flex-start}
+.mcq-img-panel{flex-shrink:0}
+.mcq-img-box{width:280px;height:280px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:80px;color:var(--text-muted);position:relative}
+.mcq-img-box img{width:100%;height:100%;object-fit:cover;display:block}
+.mcq-right{flex:1;min-width:0}
+.mcq-q{font-size:17px;font-weight:400;margin-bottom:20px;line-height:1.5}
+.mcq-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcq-opt{background:var(--surface);border:1px solid var(--border-md);border-radius:10px;padding:14px 18px;cursor:pointer;font-family:'DM Mono',monospace;font-size:20px;font-weight:500;text-align:center;transition:border-color .15s,background .15s,color .15s;color:var(--text)}
+.mcq-opt:hover:not(:disabled){border-color:var(--accent-border);background:var(--accent-dim);color:var(--accent)}
+.mcq-opt.correct{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.mcq-opt.wrong{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.mcq-opt:disabled{cursor:default}
+
+/* intermediate: type-in */
+.inter-layout{display:flex;gap:32px;align-items:flex-start}
+.inter-img-box{width:260px;height:260px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:80px;color:var(--text-muted);flex-shrink:0;position:relative}
+.inter-img-box img{width:100%;height:100%;object-fit:cover;display:block}
+.inter-right{flex:1}
+.inter-q{font-size:17px;margin-bottom:16px;line-height:1.5}
+.inter-hint{font-size:12px;color:var(--text-muted);margin-bottom:20px}
+.text-input-row{display:flex;gap:10px;align-items:center}
+.quiz-text-input{background:var(--surface);border:1px solid var(--border-md);border-radius:8px;padding:12px 16px;font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:var(--text);outline:none;width:80px;text-align:center;text-transform:uppercase;transition:border-color .15s}
+.quiz-text-input:focus{border-color:var(--accent-border)}
+.quiz-text-input.correct{border-color:var(--green-border);background:var(--green-dim);color:var(--green)}
+.quiz-text-input.wrong{border-color:var(--red-border);background:var(--red-dim);color:var(--red)}
+.submit-btn{background:var(--accent);color:#09090b;border:none;border-radius:8px;padding:12px 22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.submit-btn:hover{opacity:.85}
+.submit-btn:disabled{opacity:.4;cursor:default}
+
+/* advanced: webcam sign */
+.adv-layout{display:flex;gap:28px;align-items:flex-start}
+.adv-target{flex-shrink:0;text-align:center}
+.adv-target-char{width:160px;height:160px;background:var(--surface-2);border:2px solid var(--accent-border);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:90px;font-weight:500;color:var(--accent);margin-bottom:10px}
+.adv-target-char.pulse{animation:charPulse .38s ease}
+.adv-target-name{font-size:13px;color:var(--text-muted)}
+.adv-cam-panel{flex:1;min-width:0}
+.adv-video-frame{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#000;width:100%;aspect-ratio:4/3}
+.adv-video-frame video{display:block;transform:scaleX(-1);width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.adv-detected{display:flex;align-items:center;gap:10px;margin-top:10px}
+.adv-det-char{width:44px;height:44px;background:var(--surface-2);border:1px solid var(--border-md);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:22px;color:var(--text);flex-shrink:0}
+.adv-right{flex:1}
+
+/* quiz result */
+.quiz-result{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px}
+.result-ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:20px}
+.result-ring.great{background:var(--green-dim);border:2px solid var(--green-border)}
+.result-ring.ok{background:var(--orange-dim);border:2px solid var(--orange-border)}
+.result-ring.retry{background:var(--red-dim);border:2px solid var(--red-border)}
+.quiz-result h2{font-size:26px;font-weight:400;margin-bottom:8px}
+.quiz-result p{font-size:14px;color:var(--text-muted);margin-bottom:24px}
+.score-big{font-family:'DM Mono',monospace;font-size:48px;font-weight:500;color:var(--accent);margin-bottom:4px}
+.score-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+.result-btns{display:flex;gap:10px;justify-content:center}
+
+/* quiz feedback banner */
+.quiz-fb{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:500;margin-top:14px;border:1px solid transparent;opacity:0;transition:opacity .2s}
+.quiz-fb.show{opacity:1}
+.quiz-fb.correct{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.quiz-fb.wrong{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.next-q-btn{margin-top:16px;background:var(--accent);color:#09090b;border:none;border-radius:8px;padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;opacity:0;transition:opacity .2s,transform .1s;pointer-events:none}
+.next-q-btn.show{opacity:1;pointer-events:auto}
+.next-q-btn:hover{opacity:.85}
+
+/* ── HISTORY ── */
+.hist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--text-muted);font-size:14px}
+.hist-empty svg{width:36px;height:36px;opacity:.3}
+.hist-list{display:flex;flex-direction:column;gap:8px}
+.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px}
+.hist-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hist-icon.practice{background:var(--accent-dim)}
+.hist-icon.quiz{background:var(--purple-dim)}
+.hist-meta{flex:1}
+.hist-title{font-size:13.5px;font-weight:500;margin-bottom:2px}
+.hist-sub{font-size:11.5px;color:var(--text-muted)}
+.hist-score{font-family:'DM Mono',monospace;font-size:13px;color:var(--text-dim);text-align:right}
+.hist-score span{display:block;font-size:10px;color:var(--text-muted);margin-top:1px}
+.clear-hist-btn{display:inline-flex;align-items:center;gap:6px;background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);border-radius:7px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12.5px;cursor:pointer;transition:opacity .15s}
+.clear-hist-btn:hover{opacity:.8}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.sc-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:8px}
+.sc-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--text)}
+.sc-sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:14px}
+.chart-title{font-size:12px;font-weight:500;color:var(--text-dim);margin-bottom:16px}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.bar{width:100%;background:var(--accent-dim);border-radius:4px 4px 0 0;transition:background .2s;cursor:default;min-height:4px}
+.bar:hover{background:var(--accent)}
+.bar-lbl{font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace}
+.sign-acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.acc-chip{border-radius:7px;padding:8px 4px;text-align:center;border:1px solid var(--border)}
+.acc-chip .ch-lbl{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.acc-chip .ch-pct{font-size:9px;color:var(--text-muted);margin-top:1px}
+
+/* ── SETTINGS ── */
+.settings-section{margin-bottom:28px}
+.ss-title{font-size:13px;font-weight:500;color:var(--text-dim);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.sr-left{}
+.sr-label{font-size:13.5px;font-weight:400}
+.sr-desc{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.sr-right{flex-shrink:0;margin-left:20px}
+.setting-select{background:var(--surface-2);border:1px solid var(--border-md);border-radius:7px;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer}
+.setting-select:focus{border-color:var(--accent-border)}
+.tog-sm{position:relative;width:32px;height:18px;cursor:pointer;flex-shrink:0}
+.tog-sm .tog-track{position:absolute;inset:0;background:var(--surface-3);border:1px solid var(--border-md);border-radius:20px;transition:background .2s}
+.tog-sm .tog-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-muted);transition:transform .2s,background .2s}
+.tog-sm.on .tog-thumb{transform:translateX(14px);background:var(--accent)}
+.tog-sm.on .tog-track{background:var(--accent-dim);border-color:var(--accent-border)}
+.reset-data-btn{display:inline-flex;align-items:center;gap:6px;background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);border-radius:7px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:opacity .15s}
+.reset-data-btn:hover{opacity:.8}
+
+/* ── ABOUT ── */
+.about-inner{max-width:640px}
+.about-inner h2{font-size:26px;font-weight:400;margin:6px 0 18px;letter-spacing:-.012em}
+.about-inner p{font-size:14px;color:var(--text-dim);line-height:1.82;margin-bottom:14px}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:7px;margin-top:22px}
+.tag{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:11.5px;color:var(--text-muted);font-family:'DM Mono',monospace}
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(9,9,11,.80);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:100}
+[data-theme="light"] .modal-backdrop{background:rgba(240,237,232,.76)}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-md);border-radius:16px;width:340px;overflow:hidden}
+.modal-img-wrap{width:100%;aspect-ratio:1;background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.modal-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.modal-big-char{font-family:'DM Mono',monospace;font-size:80px;color:var(--text-muted)}
+.modal-wm{position:absolute;bottom:10px;right:10px;width:30px;height:30px;background:var(--wm-bg);backdrop-filter:blur(6px);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.modal-wm svg{width:17px;height:17px}
+.modal-body{padding:20px 22px}
+.modal-title{font-size:20px;font-weight:500;margin-bottom:3px}
+.modal-sub{font-size:12px;color:var(--text-muted)}
+.modal-acts{display:flex;gap:9px;margin-top:16px}
+.modal-close{flex:1;padding:9px;background:var(--surface-2);border:1px solid var(--border-md);border-radius:7px;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:background .13s}
+.modal-close:hover{background:var(--surface-3)}
+.modal-prac{flex:1;padding:9px;background:var(--accent);color:#09090b;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .13s}
+.modal-prac:hover{opacity:.85}
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px){
+  .home-cards{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .practice-layout{flex-direction:column}
+  .video-frame{width:100%!important}
+  .video-frame video{width:100%!important;height:auto!important;max-height:300px}
+  .adv-layout{flex-direction:column}
+  .adv-target{text-align:left}
+  .mcq-layout{flex-direction:column}
+  .inter-layout{flex-direction:column}
+  .adv-target{text-align:left}
+  .page-wrap{padding:28px 24px 40px}
+  .quiz-game{padding:24px 24px 36px}
+}
+@media (max-width:640px){
+  .mobile-topbar{display:flex}
+  .sidebar-positioner{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .28s}
+  .sidebar-positioner.mob-open{transform:translateX(0)}
+  aside{height:100%;overflow-y:auto}
+  /* On mobile, always show full sidebar (never icon-only) */
+  aside.collapsed{width:var(--sidebar-w)!important;min-width:var(--sidebar-w)!important}
+  aside.collapsed .nav-lbl,
+  aside.collapsed .nav-pill,
+  aside.collapsed .nav-section,
+  aside.collapsed .logo-row>div:last-child,
+  aside.collapsed .theme-row,
+  aside.collapsed .ws-row span{display:inline!important}
+  aside.collapsed .nav-section{display:block!important}
+  aside.collapsed .theme-row{display:flex!important}
+  aside.collapsed .logo-row>div:last-child{display:block!important}
+  aside.collapsed .logo{padding:0 16px 18px!important;display:block!important;justify-content:unset!important}
+  aside.collapsed .logo-row{justify-content:flex-start!important}
+  aside.collapsed .nav-btn{justify-content:flex-start!important;padding:8px 10px!important;gap:9px!important}
+  aside.collapsed nav{padding:0 8px!important}
+  aside.collapsed .sidebar-btm{padding:10px 16px 0!important;justify-content:flex-start!important}
+  aside.collapsed .ws-row{justify-content:flex-start!important}
+  .sidebar-toggle{display:none}
+  main{flex-direction:column}
+  .home-cards{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .hero-title{font-size:32px}
+  .page-wrap{padding:20px 16px 32px}
+  .quiz-game{padding:16px 16px 28px}
+  .level-cards{flex-direction:column;align-items:center}
+  .level-card{width:100%;max-width:340px}
+  .adv-target-char{width:120px;height:120px;font-size:68px}
+  .modal{width:calc(100vw - 32px)}
+
+  /* ── Quiz: center all elements on mobile ── */
+  .quiz-lobby{text-align:center;align-items:center}
+  .quiz-game{align-items:stretch}
+  .quiz-top{flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .quiz-top>div:first-child{text-align:center}
+  .quiz-meta{justify-content:center}
+  .quiz-progress-bar{width:100%}
+
+  /* beginner MCQ */
+  .mcq-layout{align-items:center;width:100%}
+  .mcq-img-panel{display:flex;flex-direction:column;align-items:center;width:100%}
+  .mcq-img-box{width:min(90vw,320px);height:min(90vw,320px)}
+  .mcq-right{width:100%;text-align:center}
+  .mcq-q{text-align:center}
+  .mcq-options{width:100%;grid-template-columns:1fr 1fr}
+  #beg-fb{justify-content:center}
+  #beg-next{display:block;margin:14px auto 0}
+
+  /* intermediate type-in */
+  .inter-layout{align-items:center;width:100%}
+  .inter-img-box{width:min(90vw,280px);height:min(90vw,280px);align-self:center}
+  .inter-right{width:100%;text-align:center}
+  .inter-q,.inter-hint{text-align:center}
+  .text-input-row{justify-content:center}
+  #int-fb{justify-content:center}
+  #int-next{display:block;margin:14px auto 0}
+
+  /* advanced camera */
+  .adv-layout{align-items:center;width:100%}
+  .adv-target{display:flex;flex-direction:column;align-items:center;width:100%;text-align:center}
+  .adv-cam-panel{width:100%}
+  .adv-video-frame{width:100%}
+  .adv-detected{justify-content:center}
+  #adv-fb{justify-content:center}
+  #adv-next{display:block;margin:14px auto 0}
+
+  /* result screen */
+  .quiz-result{text-align:center;align-items:center}
+  .result-btns{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile overlay (closes sidebar on tap) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- Full app wrapper -->
+<div style="display:flex;flex-direction:column;width:100%;height:100%">
+
+<!-- Mobile top bar (visible < 640px) -->
+<div class="mobile-topbar" id="mobile-topbar">
+  <div class="logo-gem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#09090b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+      <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+    </svg>
+  </div>
+  <span class="mobile-topbar-name">Gesturify</span>
+  <button class="mob-menu-btn" onclick="openMobileSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</div>
+
+<!-- Main row: sidebar + content -->
+<div class="main-body">
+
+<!-- ══ SIDEBAR (inside positioner for toggle button) ══ -->
+<div class="sidebar-positioner" id="sidebar-positioner">
+<aside id="sidebar">
+  <div class="logo">
+    <div class="logo-row">
+      <div class="logo-gem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#09090b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+        </svg>
+      </div>
+      <div><div class="logo-name">Gesturify</div><div class="logo-tag">ISL · Sign Language</div></div>
+    </div>
+  </div>
+  <nav>
+    <span class="nav-section">Main</span>
+    <button class="nav-btn active" onclick="nav('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-lbl">Home</span>
+    </button>
+    <button class="nav-btn" onclick="nav('practice',this)" id="nav-practice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="nav-lbl">Practice</span><span class="nav-pill">Live</span>
+    </button>
+    <button class="nav-btn" onclick="nav('learn',this)" id="nav-learn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span class="nav-lbl">Learn</span><span class="nav-pill blue">35</span>
+    </button>
+    <span class="nav-section">Features</span>
+    <button class="nav-btn" onclick="nav('quiz',this)" id="nav-quiz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      <span class="nav-lbl">Quiz</span><span class="nav-pill purple">3 levels</span>
+    </button>
+    <button class="nav-btn" onclick="nav('history',this)" id="nav-history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span class="nav-lbl">History</span>
+    </button>
+    <button class="nav-btn" onclick="nav('stats',this)" id="nav-stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-lbl">Statistics</span>
+    </button>
+    <button class="nav-btn" onclick="nav('settings',this)" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span class="nav-lbl">Settings</span>
+    </button>
+    <span class="nav-section">Info</span>
+    <button class="nav-btn" onclick="nav('about',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <span class="nav-lbl">About</span>
+    </button>
+  </nav>
+  <div class="theme-row">
+    <span class="theme-lbl" id="theme-lbl">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      Light mode
+    </span>
+    <div class="tog" onclick="toggleTheme()"><div class="tog-track"><div class="tog-thumb"></div></div></div>
+  </div>
+  <div class="sidebar-btm">
+    <div class="ws-row"><div class="ws-dot" id="ws-dot"></div><span id="ws-label">Not connected</span></div>
+  </div>
+</aside>
+<!-- Desktop sidebar collapse toggle -->
+<button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+</div><!-- /sidebar-positioner -->
+
+<!-- ══ MAIN ══ -->
+<main>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="page-wrap">
+    <p class="eyebrow">Indian Sign Language · AI Detection</p>
+    <h1 class="hero-title">Learn to sign.<br><em>One gesture</em> at a time.</h1>
+    <p class="hero-desc">Gesturify uses real-time computer vision to help you practice Indian Sign Language — instant feedback on your hand gestures as you learn the full alphabet and digits.</p>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="nav('practice',document.getElementById('nav-practice'))">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Practice
+      </button>
+      <button class="btn-ghost" onclick="nav('quiz',document.getElementById('nav-quiz'))">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>Take a Quiz
+      </button>
+      <button class="btn-ghost" onclick="nav('learn',document.getElementById('nav-learn'))">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Browse Signs
+      </button>
+    </div>
+    <div class="home-cards">
+      <div class="home-card hi" onclick="nav('practice',document.getElementById('nav-practice'))"><div class="hc-icon">🎯</div><div class="hc-title">Practice Mode</div><div class="hc-desc">Match random sign prompts with your hand in real time.</div></div>
+      <div class="home-card" onclick="nav('quiz',document.getElementById('nav-quiz'))"><div class="hc-icon">🧩</div><div class="hc-title">Quiz Mode</div><div class="hc-desc">3 difficulty levels — from MCQ to live webcam signing.</div></div>
+      <div class="home-card" onclick="nav('stats',document.getElementById('nav-stats'))"><div class="hc-icon">📊</div><div class="hc-title">Statistics</div><div class="hc-desc">Track accuracy, streaks, and progress across all sessions.</div></div>
+    </div>
+    <hr class="divider">
+    <div class="stat-row">
+      <div><div class="stat-num">35</div><div class="stat-lbl">Sign classes</div></div>
+      <div><div class="stat-num">3</div><div class="stat-lbl">Quiz levels</div></div>
+      <div><div class="stat-num">A–Z</div><div class="stat-lbl">Alphabet</div></div>
+      <div><div class="stat-num">1–9</div><div class="stat-lbl">Digits</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE -->
+<div class="page" id="page-practice">
+  <div class="page-wrap">
+    <p class="eyebrow">Practice Mode</p>
+    <h2 style="font-size:24px;font-weight:400;letter-spacing:-.015em;margin-top:5px;margin-bottom:4px">Match the sign shown</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:22px">Hold the correct hand sign in front of your camera — a match confirms automatically.</p>
+    <div class="practice-layout">
+      <div class="vid-side">
+        <div class="video-frame">
+          <video id="video" autoplay muted playsinline></video>
+          <div class="video-flash" id="video-flash"></div>
+          <div class="vbadges"><div class="vbadge"><div class="rec-blink"></div>LIVE</div><div class="vbadge" id="fps-badge-practice">5 fps</div></div>
+          <!-- Hint overlay: appears after user is stuck -->
+          <div class="hint-overlay" id="hint-overlay" onclick="openHintModal()">
+            <img class="hint-img" id="hint-img" src="" alt="Sign hint">
+            <div class="hint-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              Hint — tap to enlarge
+            </div>
+          </div>
+        </div>
+        <div class="ws-mini"><div class="ws-dot" id="ws-dot-2"></div><span id="ws-label-2">Connecting…</span></div>
+      </div>
+      <div class="practice-side">
+        <div class="card-base" style="padding:20px 22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <span class="card-lbl">Your target</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-dim)">Score: <span id="score-val" style="color:var(--accent);font-weight:500">0</span> &nbsp;·&nbsp; Streak: <span id="streak-val" style="color:var(--accent);font-weight:500">0</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px">
+            <div class="target-char" id="target-char"><span id="target-char-text">—</span><div class="hint-timer-ring" id="hint-timer-ring"></div></div>
+            <div><div style="font-size:15px;font-weight:500;margin-bottom:4px" id="target-name">Loading…</div><div style="font-size:12px;color:var(--text-muted);line-height:1.55" id="target-hint">Starting…</div></div>
+          </div>
+        </div>
+        <div class="feedback-strip" id="feedback-strip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="feedback-icon" style="width:15px;height:15px;flex-shrink:0"></svg>
+          <span id="feedback-text"></span>
+        </div>
+        <div class="card-base" style="padding:16px 20px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="det-char" id="det-char">—</div>
+            <div><div class="det-title">Currently detected</div><div class="det-name" id="det-name">No gesture</div></div>
+          </div>
+        </div>
+        <div class="card-base" style="padding:16px 20px">
+          <div class="prog-title">Session progress</div>
+          <div class="prog-grid" id="prog-grid"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-sm" onclick="nextSign()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>Skip
+            </button>
+            <button class="btn-sm" onclick="resetSession()">Reset session</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEARN -->
+<div class="page" id="page-learn">
+  <div class="page-wrap">
+    <p class="eyebrow">Reference Library</p>
+    <h2 style="font-size:24px;font-weight:400;letter-spacing:-.015em;margin-top:5px">Learn the signs</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:4px">All 35 ISL gestures — click any card to view details or jump into practice.</p>
+    <div class="learn-toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="search-input" placeholder="Search signs…" oninput="renderLearn()">
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-tab" onclick="setFilter('digit',this)">Digits</button>
+        <button class="filter-tab" onclick="setFilter('letter',this)">Letters</button>
+      </div>
+    </div>
+    <div class="learn-grid" id="learn-grid"></div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+  <!-- lobby -->
+  <div class="quiz-lobby" id="quiz-lobby">
+    <p class="eyebrow" style="margin-bottom:10px">Quiz Mode</p>
+    <h2>Test your knowledge</h2>
+    <p>Pick a difficulty level. Each quiz has <span id="quiz-qcount-display">10</span> questions drawn from all 35 ISL signs.</p>
+    <div class="level-cards">
+      <div class="level-card beginner" onclick="startQuiz('beginner')">
+        <div class="lc-icon">🟢</div>
+        <div class="lc-name">Beginner</div>
+        <div class="lc-desc">See a sign image. Pick the correct label from 4 multiple-choice options.</div>
+        <span class="lc-tag green">MCQ · 4 options</span>
+      </div>
+      <div class="level-card intermediate" onclick="startQuiz('intermediate')">
+        <div class="lc-icon">🟡</div>
+        <div class="lc-name">Intermediate</div>
+        <div class="lc-desc">See a sign image. Type the correct letter or digit — no hints given.</div>
+        <span class="lc-tag orange">Type-in · No hints</span>
+      </div>
+      <div class="level-card advanced" onclick="startQuiz('advanced')">
+        <div class="lc-icon">🟣</div>
+        <div class="lc-name">Advanced</div>
+        <div class="lc-desc">See the target label. Perform the correct sign in front of your camera.</div>
+        <span class="lc-tag purple">Live cam · No options</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- beginner game -->
+  <div class="quiz-game" id="quiz-beginner">
+    <div class="quiz-top">
+      <div>
+        <p class="eyebrow" style="margin-bottom:4px">Beginner Quiz</p>
+        <h3>Pick the correct sign</h3>
+      </div>
+      <div class="quiz-meta">
+        <div class="qmeta-chip">Q <span id="beg-qnum">1</span>/<span id="beg-qtotal">10</span></div>
+        <div class="qmeta-chip">Score <span id="beg-score">0</span></div>
+        <button class="btn-sm" onclick="quitQuiz()">✕ Quit</button>
+      </div>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="beg-prog" style="width:0%"></div></div>
+    <div class="mcq-layout">
+      <div class="mcq-img-panel">
+        <div class="mcq-img-box" id="beg-img-box">
+          <img id="beg-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('beg-img-fallback').style.display='flex'">
+          <div id="beg-img-fallback" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-family:'DM Mono',monospace;font-size:80px;color:var(--text-muted)"></div>
+        </div>
+        <div class="quiz-fb" id="beg-fb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="beg-fb-icon" style="width:14px;height:14px;flex-shrink:0"></svg>
+          <span id="beg-fb-text"></span>
+        </div>
+      </div>
+      <div class="mcq-right">
+        <div class="mcq-q" id="beg-question">Which sign is shown in the image?</div>
+        <div class="mcq-options" id="beg-options"></div>
+        <button class="next-q-btn" id="beg-next" onclick="quizNext('beginner')">Next question →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- intermediate game -->
+  <div class="quiz-game" id="quiz-intermediate">
+    <div class="quiz-top">
+      <div>
+        <p class="eyebrow" style="margin-bottom:4px">Intermediate Quiz</p>
+        <h3>Type the sign shown</h3>
+      </div>
+      <div class="quiz-meta">
+        <div class="qmeta-chip">Q <span id="int-qnum">1</span>/<span id="int-qtotal">10</span></div>
+        <div class="qmeta-chip">Score <span id="int-score">0</span></div>
+        <button class="btn-sm" onclick="quitQuiz()">✕ Quit</button>
+      </div>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="int-prog" style="width:0%"></div></div>
+    <div class="inter-layout">
+      <div class="inter-img-box" id="int-img-box">
+        <img id="int-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('int-img-fallback').style.display='flex'">
+        <div id="int-img-fallback" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-family:'DM Mono',monospace;font-size:80px;color:var(--text-muted)"></div>
+      </div>
+      <div class="inter-right">
+        <div class="inter-q">What sign is shown in the image?</div>
+        <div class="inter-hint">Type a single letter (A–Z) or digit (1–9)</div>
+        <div class="text-input-row">
+          <input class="quiz-text-input" id="int-input" maxlength="1" placeholder="?" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+          <button class="submit-btn" id="int-submit" onclick="submitIntermediate()">Submit</button>
+        </div>
+        <div class="quiz-fb" id="int-fb" style="margin-top:14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="int-fb-icon" style="width:14px;height:14px;flex-shrink:0"></svg>
+          <span id="int-fb-text"></span>
+        </div>
+        <button class="next-q-btn" id="int-next" onclick="quizNext('intermediate')">Next question →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- advanced game -->
+  <div class="quiz-game" id="quiz-advanced">
+    <div class="quiz-top">
+      <div>
+        <p class="eyebrow" style="margin-bottom:4px">Advanced Quiz</p>
+        <h3>Perform the sign</h3>
+      </div>
+      <div class="quiz-meta">
+        <div class="qmeta-chip">Q <span id="adv-qnum">1</span>/<span id="adv-qtotal">10</span></div>
+        <div class="qmeta-chip">Score <span id="adv-score">0</span></div>
+        <button class="btn-sm" onclick="quitQuiz()">✕ Quit</button>
+      </div>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="adv-prog" style="width:0%"></div></div>
+    <div class="adv-layout">
+      <div class="adv-target">
+        <div class="adv-target-char" id="adv-target-char">—</div>
+        <div class="adv-target-name" id="adv-target-name">Make this sign</div>
+        <div class="quiz-fb" id="adv-fb" style="margin-top:14px;text-align:left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="adv-fb-icon" style="width:14px;height:14px;flex-shrink:0"></svg>
+          <span id="adv-fb-text"></span>
+        </div>
+        <button class="next-q-btn" id="adv-next" onclick="quizNext('advanced')" style="margin-top:12px">Next question →</button>
+      </div>
+      <div class="adv-cam-panel">
+        <div class="adv-video-frame">
+          <video id="adv-video" autoplay muted playsinline></video>
+          <div class="vbadges"><div class="vbadge"><div class="rec-blink"></div>LIVE</div><div class="vbadge" id="fps-badge-adv">5 fps</div></div>
+        </div>
+        <div class="adv-detected">
+          <div class="adv-det-char" id="adv-det-char">—</div>
+          <div><div class="det-title">Detecting…</div><div class="det-name" id="adv-det-name">Show your hand</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- result -->
+  <div class="quiz-result" id="quiz-result" style="display:none">
+    <div class="result-ring" id="result-ring">🏆</div>
+    <div class="score-big" id="result-score">0/10</div>
+    <div class="score-sub" id="result-sub">Quiz complete</div>
+    <h2 id="result-title">Well done!</h2>
+    <p id="result-msg">Keep practising to improve your score.</p>
+    <div class="result-btns">
+      <button class="btn-ghost" onclick="quitQuiz()">Back to levels</button>
+      <button class="btn-primary" id="result-retry-btn">Try again</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="page-wrap">
+    <p class="eyebrow">Activity Log</p>
+    <h2 style="font-size:24px;font-weight:400;letter-spacing:-.015em;margin-top:5px;margin-bottom:4px">Practice History</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:20px">Your recent practice and quiz sessions.</p>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="clear-hist-btn" onclick="clearHistory()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Clear history
+      </button>
+    </div>
+    <div id="hist-container"></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="page" id="page-stats">
+  <div class="page-wrap">
+    <p class="eyebrow">Your Progress</p>
+    <h2 style="font-size:24px;font-weight:400;letter-spacing:-.015em;margin-top:5px;margin-bottom:20px">Statistics</h2>
+    <div class="stats-grid" id="stats-overview"></div>
+    <div class="chart-card">
+      <div class="chart-title">Quiz scores by session (last 7)</div>
+      <div class="bar-chart" id="score-chart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Sign accuracy breakdown</div>
+      <div class="sign-acc-grid" id="acc-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="page-wrap" style="display:flex;flex-direction:column;align-items:center">
+    <div style="width:100%;max-width:580px">
+    <p class="eyebrow">Configuration</p>
+    <h2 style="font-size:24px;font-weight:400;letter-spacing:-.015em;margin-top:5px;margin-bottom:28px">Settings</h2>
+    <div class="settings-section">
+      <div class="ss-title">Appearance</div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Theme</div><div class="sr-desc">Switch between dark and light mode</div></div>
+        <div class="sr-right">
+          <div class="tog" onclick="toggleTheme()"><div class="tog-track"><div class="tog-thumb"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="ss-title">Practice</div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Frame rate</div><div class="sr-desc">How often frames are sent for inference</div></div>
+        <div class="sr-right">
+          <select class="setting-select" id="setting-fps" onchange="saveSetting('fps',this.value)">
+            <option value="100">10 fps</option>
+            <option value="200" selected>5 fps</option>
+            <option value="500">2 fps</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Correct hold time</div><div class="sr-desc">How long before advancing to next sign</div></div>
+        <div class="sr-right">
+          <select class="setting-select" id="setting-holdtime" onchange="saveSetting('holdtime',this.value)">
+            <option value="800">0.8s</option>
+            <option value="1400" selected>1.4s</option>
+            <option value="2500">2.5s</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Sound effects</div><div class="sr-desc">Play a tone on correct / incorrect detection</div></div>
+        <div class="sr-right">
+          <div class="tog-sm" id="tog-sound" onclick="toggleSmallTog('sound')"><div class="tog-track"></div><div class="tog-thumb"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="ss-title">Quiz</div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Questions per quiz</div><div class="sr-desc">Number of questions in each quiz session</div></div>
+        <div class="sr-right">
+          <select class="setting-select" id="setting-qcount" onchange="saveSetting('qcount',this.value)">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Show answer on wrong</div><div class="sr-desc">Reveal the correct answer after a wrong response</div></div>
+        <div class="sr-right">
+          <div class="tog-sm on" id="tog-reveal" onclick="toggleSmallTog('reveal')"><div class="tog-track"></div><div class="tog-thumb"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="ss-title">Data</div>
+      <div class="setting-row">
+        <div class="sr-left"><div class="sr-label">Reset all data</div><div class="sr-desc">Clears history, stats, and session records</div></div>
+        <div class="sr-right">
+          <button class="reset-data-btn" onclick="resetAllData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Reset all data
+          </button>
+        </div>
+      </div>
+    </div><!-- /settings-section Data -->
+    </div><!-- /centered inner wrapper -->
+  </div>
+</div>
+<div class="page" id="page-about">
+  <div class="page-wrap">
+    <div class="about-inner">
+      <p class="eyebrow">About</p>
+      <h2>Gesturify</h2>
+      <p>Gesturify is a real-time Indian Sign Language practice tool powered by a computer vision model served through a FastAPI backend.</p>
+      <p>Practice mode prompts you with a random sign and confirms when your gesture matches the prediction. Quiz mode offers three levels: Beginner (MCQ), Intermediate (type-in), and Advanced (live webcam signing). Learn mode shows all 35 reference images from your local dataset. Statistics and History track your progress over time.</p>
+      <p>The frontend captures webcam frames at configurable fps, mirrors the display for natural interaction, then sends the unmirrored frame via WebSocket for inference. The model recognises 35 classes — digits 1–9, letters A–Z, and a "No Hand" null class.</p>
+      <div class="tag-cloud">
+        <span class="tag">FastAPI</span><span class="tag">WebSocket</span><span class="tag">MediaDevices API</span>
+        <span class="tag">ISL</span><span class="tag">Computer Vision</span><span class="tag">Real-Time</span><span class="tag">35 Classes</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+</div><!-- /main-body -->
+</div><!-- /app wrapper -->
+
+<!-- HINT MODAL (practice) -->
+<div class="modal-backdrop" id="hint-modal" onclick="closeHintModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px;width:calc(100vw - 32px)">
+    <div class="modal-img-wrap" style="aspect-ratio:1">
+      <img id="hint-modal-img" src="" alt="Sign reference" style="width:100%;height:100%;object-fit:cover;display:block">
+      <div class="modal-wm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+          <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+          <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+        </svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="hint-modal-title">Sign reference</div>
+      <div class="modal-sub">Study this hand position, then try again</div>
+      <div class="modal-acts">
+        <button class="modal-close" onclick="closeHintModal()">Close</button>
+        <button class="modal-prac" onclick="nextSign();closeHintModal()">Skip this sign</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL (learn) -->
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-img-wrap">
+      <img id="modal-img" src="" alt="" style="display:none">
+      <div class="modal-big-char" id="modal-fallback" style="display:none"></div>
+      <div class="modal-wm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/>
+          <path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/>
+          <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+        </svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-sub" id="modal-sub"></div>
+      <div class="modal-acts">
+        <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">Close</button>
+        <button class="modal-prac" id="modal-prac-btn">Practice this ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   SIDEBAR TOGGLE
+════════════════════════════════════════ */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+function openMobileSidebar() {
+  document.getElementById('sidebar-positioner').classList.add('mob-open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar-positioner').classList.remove('mob-open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════
+   DATA & HELPERS
+════════════════════════════════════════ */
+const LABELS = ['1','2','3','4','5','6','7','8','9',
+  'A','B','C','D','E','F','G','H','I','J','K',
+  'L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const labelType = l => isNaN(l) ? 'letter' : 'digit';
+const labelName = l => isNaN(l) ? `Letter ${l}` : `Digit ${l}`;
+const shuffle   = a => [...a].sort(() => Math.random() - .5);
+const rand      = a => a[Math.floor(Math.random() * a.length)];
+const pick      = (n, excl) => shuffle(LABELS.filter(l => l !== excl)).slice(0, n);
+
+/* ── settings store ── */
+const DEF_SETTINGS = { fps: 200, holdtime: 1400, qcount: 10, sound: false, reveal: true };
+let S = { ...DEF_SETTINGS, ...JSON.parse(localStorage.getItem('g_settings') || '{}') };
+function saveSetting(k, v) {
+  S[k] = isNaN(v) ? v : Number(v);
+  localStorage.setItem('g_settings', JSON.stringify(S));
+  if (k === 'qcount') {
+    const el = document.getElementById('quiz-qcount-display');
+    if (el) el.textContent = S.qcount;
+  }
+  if (k === 'fps') {
+    const label = fpsLabel(S.fps);
+    ['fps-badge-practice','fps-badge-adv'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = label;
+    });
+  }
+}
+
+function fpsLabel(ms) {
+  const fps = Math.round(1000 / ms);
+  return fps + ' fps';
+}
+function toggleSmallTog(k) {
+  S[k] = !S[k]; saveSetting(k, S[k]);
+  const el = document.getElementById('tog-' + k);
+  S[k] ? el.classList.add('on') : el.classList.remove('on');
+}
+function applySettings() {
+  const sel = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  sel('setting-fps', S.fps);
+  sel('setting-holdtime', S.holdtime);
+  sel('setting-qcount', S.qcount);
+  const tog = (id, val) => { const el = document.getElementById(id); if (el) val ? el.classList.add('on') : el.classList.remove('on'); };
+  tog('tog-sound', S.sound);
+  tog('tog-reveal', S.reveal);
+  // Keep lobby count in sync
+  const qel = document.getElementById('quiz-qcount-display');
+  if (qel) qel.textContent = S.qcount || 10;
+  // Keep fps badges in sync
+  const label = fpsLabel(S.fps);
+  ['fps-badge-practice','fps-badge-adv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
+/* ── history store ── */
+let HISTORY = JSON.parse(localStorage.getItem('g_history') || '[]');
+function addHistory(entry) {
+  HISTORY.unshift({ ...entry, ts: Date.now() });
+  if (HISTORY.length > 50) HISTORY.pop();
+  localStorage.setItem('g_history', JSON.stringify(HISTORY));
+}
+function clearHistory() {
+  HISTORY = []; localStorage.removeItem('g_history');
+  renderHistory();
+}
+function resetAllData() {
+  if (!confirm('Reset all history, stats, and session data?')) return;
+  localStorage.clear();
+  HISTORY = []; S = { ...DEF_SETTINGS };
+  quizStats = {}; localStorage.setItem('g_quizstats', JSON.stringify(quizStats));
+  practiceStats = {}; localStorage.setItem('g_pracstats', JSON.stringify(practiceStats));
+  renderHistory(); renderStats(); applySettings();
+  alert('All data cleared.');
+}
+
+/* ── quiz/practice accuracy stats ── */
+let quizStats   = JSON.parse(localStorage.getItem('g_quizstats')  || '{}'); // {label: {c,t}}
+let practiceStats = JSON.parse(localStorage.getItem('g_pracstats') || '{}'); // {label: {c,t}}
+function recordAcc(store, label, correct) {
+  if (!store[label]) store[label] = { c: 0, t: 0 };
+  store[label].t++;
+  if (correct) store[label].c++;
+}
+function saveQuizStats()   { localStorage.setItem('g_quizstats',  JSON.stringify(quizStats)); }
+function savePracStats()   { localStorage.setItem('g_pracstats',  JSON.stringify(practiceStats)); }
+
+/* ── quiz session scores ── */
+let quizScores = JSON.parse(localStorage.getItem('g_quizscores') || '[]');
+function saveQuizScore(s, max) {
+  quizScores.push({ s, max, ts: Date.now() });
+  if (quizScores.length > 30) quizScores.shift();
+  localStorage.setItem('g_quizscores', JSON.stringify(quizScores));
+}
+
+/* ════════════════════════════════════════
+   THEME
+════════════════════════════════════════ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const goLight = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', goLight ? 'light' : 'dark');
+  document.getElementById('theme-lbl').childNodes[2].nodeValue = goLight ? ' Dark mode' : ' Light mode';
+  // sync settings page toggle
+  const t2 = document.querySelector('#page-settings .tog');
+  if (t2) t2.style.opacity = '1';
+}
+
+/* ════════════════════════════════════════
+   NAV
+════════════════════════════════════════ */
+function nav(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'practice') initPractice();
+  if (id === 'learn')    initLearn();
+  if (id === 'history')  renderHistory();
+  if (id === 'stats')    renderStats();
+  if (id === 'settings') applySettings();
+  if (id === 'quiz')     showQuizLobby();
+  // Close mobile sidebar after navigating
+  closeMobileSidebar();
+}
+
+/* ════════════════════════════════════════
+   PRACTICE
+════════════════════════════════════════ */
+let practiceReady = false, socket = null;
+let score = 0, streak = 0, currentTarget = '';
+let sessionDone = new Set(), feedbackTimeout = null, lockInput = false;
+// Hint system
+const HINT_DELAY = 8000; // ms before translucent hint appears
+let hintTimeout = null, hintVisible = false;
+
+function showHint(label) {
+  hintVisible = true;
+  const overlay = document.getElementById('hint-overlay');
+  const img     = document.getElementById('hint-img');
+  img.src = `/dataset/${label}.png`;
+  img.onerror = () => { overlay.style.display = 'none'; };
+  overlay.classList.add('visible');
+  document.getElementById('hint-timer-ring').classList.remove('ticking');
+}
+
+function hideHint() {
+  hintVisible = false;
+  document.getElementById('hint-overlay').classList.remove('visible');
+  document.getElementById('hint-timer-ring').classList.remove('ticking');
+  if (hintTimeout) { clearTimeout(hintTimeout); hintTimeout = null; }
+}
+
+function startHintTimer(label) {
+  hideHint();
+  // Start orange ring immediately to signal countdown
+  setTimeout(() => {
+    if (currentTarget === label && !lockInput) {
+      document.getElementById('hint-timer-ring').classList.add('ticking');
+    }
+  }, 3000); // ring appears at 3s
+  hintTimeout = setTimeout(() => {
+    if (currentTarget === label && !lockInput) showHint(label);
+  }, HINT_DELAY);
+}
+
+function openHintModal() {
+  const modal = document.getElementById('hint-modal');
+  const img   = document.getElementById('hint-modal-img');
+  img.src = `/dataset/${currentTarget}.png`;
+  document.getElementById('hint-modal-title').textContent = `${labelName(currentTarget)} — sign reference`;
+  modal.classList.add('open');
+}
+
+function closeHintModal(e) {
+  if (!e || e.target === document.getElementById('hint-modal'))
+    document.getElementById('hint-modal').classList.remove('open');
+}
+
+function pickNextSign() {
+  const rem = LABELS.filter(l => !sessionDone.has(l));
+  if (!rem.length) { sessionDone.clear(); updateProgGrid(); }
+  const pool = (rem.length ? rem : LABELS).filter(l => l !== currentTarget);
+  return rand(pool.length ? pool : LABELS);
+}
+function setTarget(label) {
+  currentTarget = label; lockInput = false;
+  // Update only the text span — never touch textContent on the container
+  // so the hint-timer-ring child div is never destroyed
+  const charText = document.getElementById('target-char-text');
+  if (charText) charText.textContent = label;
+  const el = document.getElementById('target-char');
+  el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+  document.getElementById('target-name').textContent = labelName(label);
+  document.getElementById('target-hint').textContent = `Make the sign for "${label}" in front of your camera`;
+  updateProgGrid();
+  // Only start hint timer after practice is fully initialised (webcam + socket ready)
+  if (practiceReady) startHintTimer(label);
+}
+function nextSign() { hideFeedback(); setTarget(pickNextSign()); }
+function resetSession() {
+  score = 0; streak = 0; sessionDone.clear();
+  document.getElementById('score-val').textContent = '0';
+  document.getElementById('streak-val').textContent = '0';
+  nextSign();
+}
+function showFeedback(correct, label) {
+  const strip = document.getElementById('feedback-strip');
+  const icon  = document.getElementById('feedback-icon');
+  const flash = document.getElementById('video-flash');
+  strip.classList.remove('correct','wrong','show'); void strip.offsetWidth;
+  if (correct) {
+    hideHint();
+    strip.classList.add('correct','show');
+    icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+    document.getElementById('feedback-text').textContent = `✓ Correct! "${label}" matched — loading next sign…`;
+    flash.className = 'video-flash green show';
+    setTimeout(() => flash.classList.remove('show'), 600);
+    if (S.sound) {
+        playSuccessTone();
+    }
+  } else {
+    strip.classList.add('wrong','show');
+    icon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+    document.getElementById('feedback-text').textContent = 'Keep trying — make sure your hand is clearly visible.';
+    if (S.sound) {
+        playErrorTone();
+    }
+  }
+  if (feedbackTimeout) clearTimeout(feedbackTimeout);
+  if (correct) feedbackTimeout = setTimeout(() => { hideFeedback(); nextSign(); }, S.holdtime);
+}
+function hideFeedback() { document.getElementById('feedback-strip').classList.remove('show'); }
+function updateProgGrid() {
+  const grid = document.getElementById('prog-grid');
+  grid.innerHTML = '';
+  LABELS.forEach(l => {
+    const c = document.createElement('div');
+    c.className = 'prog-chip' + (sessionDone.has(l) ? ' done' : '') + (l === currentTarget ? ' active' : '');
+    c.textContent = l;
+    grid.appendChild(c);
+  });
+}
+function initPractice() {
+  if (practiceReady) return;
+  practiceReady = true;
+  updateProgGrid(); setTarget(pickNextSign());
+  const video = document.getElementById('video');
+  navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
+  const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+  socket = new WebSocket('ws://' + window.location.host + '/ws');
+  function setWS(open) {
+    ['ws-dot','ws-dot-2'].forEach(id => { document.getElementById(id).className = 'ws-dot' + (open ? ' on' : ''); });
+    const lbl = open ? 'Connected' : 'Disconnected';
+    document.getElementById('ws-label').textContent = lbl;
+    document.getElementById('ws-label-2').textContent = lbl;
+  }
+  socket.onopen  = () => setWS(true);
+  socket.onclose = () => setWS(false);
+  socket.onerror = () => { document.getElementById('ws-label-2').textContent = 'Error'; };
+  setInterval(() => {
+    if (socket && socket.readyState === WebSocket.OPEN && video.videoWidth) {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
+      socket.send(canvas.toDataURL('image/jpeg', 0.5));
+    }
+  }, S.fps);
+  socket.onmessage = ev => {
+    const raw = ev.data.trim(), noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
+    document.getElementById('det-char').textContent = noHand ? '∅' : raw;
+    document.getElementById('det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
+    if (!noHand && !lockInput && raw === currentTarget) {
+      lockInput = true; score++; streak++;
+      sessionDone.add(currentTarget);
+      recordAcc(practiceStats, currentTarget, true); savePracStats();
+      document.getElementById('score-val').textContent  = score;
+      document.getElementById('streak-val').textContent = streak;
+      showFeedback(true, raw); updateProgGrid();
+      addHistory({ type: 'practice', label: raw, result: 'correct' });
+    }
+    if (noHand) { streak = 0; document.getElementById('streak-val').textContent = 0; }
+  };
+}
+
+/* ════════════════════════════════════════
+   LEARN
+════════════════════════════════════════ */
+let learnReady = false, learnFilter = 'all';
+function initLearn() { if (learnReady) return; learnReady = true; renderLearn(); }
+function setFilter(f, btn) {
+  learnFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); renderLearn();
+}
+const WM_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+        </svg>
+`;
+function renderLearn() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+  const grid = document.getElementById('learn-grid');
+  grid.innerHTML = '';
+  LABELS.forEach(label => {
+    const type = labelType(label);
+    if (learnFilter !== 'all' && type !== learnFilter) return;
+    if (q && !label.toLowerCase().includes(q) && !labelName(label).toLowerCase().includes(q)) return;
+    const card = document.createElement('div');
+    card.className = 'sign-card'; card.onclick = () => openModal(label);
+    card.innerHTML = `<div class="sign-img-wrap"><img src="/dataset/${label}.png" alt="${label}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="sign-img-placeholder" style="display:none">${label}</div><div class="card-wm">${WM_ICON}</div></div><div class="sign-footer"><span class="sign-label">${label}</span><span class="sign-type">${type}</span></div>`;
+    grid.appendChild(card);
+  });
+}
+function openModal(label) {
+  const mImg = document.getElementById('modal-img'), mFall = document.getElementById('modal-fallback');
+  document.getElementById('modal-title').textContent = labelName(label);
+  document.getElementById('modal-sub').textContent = `ISL sign · ${labelType(label)}`;
+  mImg.style.display = 'block'; mFall.style.display = 'none';
+  mImg.src = `/dataset/${label}.png`;
+  mImg.onerror = () => { mImg.style.display = 'none'; mFall.style.display = 'flex'; mFall.textContent = label; };
+  document.getElementById('modal-prac-btn').onclick = () => {
+    document.getElementById('modal').classList.remove('open');
+    nav('practice', document.getElementById('nav-practice'));
+    setTimeout(() => setTarget(label), 80);
+  };
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e) { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); }
+
+/* ════════════════════════════════════════
+   QUIZ
+════════════════════════════════════════ */
+let qLevel = '', qQueue = [], qIdx = 0, qCorrect = 0;
+let advSocket = null, advLocked = false;
+
+function showQuizLobby() {
+  document.getElementById('quiz-lobby').style.display = 'flex';
+  ['beginner','intermediate','advanced'].forEach(l => document.getElementById('quiz-' + l).classList.remove('active'));
+  document.getElementById('quiz-result').style.display = 'none';
+  if (advSocket) { advSocket.close(); advSocket = null; }
+  // Update dynamic question count in lobby text
+  const el = document.getElementById('quiz-qcount-display');
+  if (el) el.textContent = S.qcount || 10;
+}
+
+function startQuiz(level) {
+  qLevel = level;
+  qIdx = 0; qCorrect = 0;
+  const n = Math.min(S.qcount || 10, LABELS.length);
+  // Build queue by cycling through all labels shuffled, then slice to n
+  // This guarantees every label gets a fair chance and no label is skipped
+  const pool = shuffle([...LABELS]);
+  // If n > 35, repeat the pool
+  let full = [];
+  while (full.length < n) full = full.concat(shuffle([...LABELS]));
+  qQueue = full.slice(0, n);
+
+  document.getElementById('quiz-lobby').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'none';
+  ['beginner','intermediate','advanced'].forEach(l => document.getElementById('quiz-' + l).classList.remove('active'));
+  document.getElementById('quiz-' + level).classList.add('active');
+  if (level === 'advanced') initAdvancedCam();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const label = qQueue[qIdx];
+  const n = qQueue.length;
+  const pct = Math.round((qIdx / n) * 100);
+
+  if (qLevel === 'beginner') {
+    document.getElementById('beg-qnum').textContent = qIdx + 1;
+    document.getElementById('beg-qtotal').textContent = n;
+    document.getElementById('beg-score').textContent = qCorrect;
+    document.getElementById('beg-prog').style.width = pct + '%';
+    const img = document.getElementById('beg-img'), fb = document.getElementById('beg-img-fallback');
+    img.style.display = 'block'; fb.style.display = 'none';
+    img.src = `/dataset/${label}.png`;
+    img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; fb.textContent = label; };
+    const opts = shuffle([label, ...pick(3, label)]);
+    const cont = document.getElementById('beg-options');
+    cont.innerHTML = '';
+    opts.forEach(o => {
+      const b = document.createElement('button');
+      b.className = 'mcq-opt'; b.textContent = o;
+      b.onclick = () => answerBeginner(o, label);
+      cont.appendChild(b);
+    });
+    hideBegFb(); document.getElementById('beg-next').classList.remove('show');
+  }
+
+  if (qLevel === 'intermediate') {
+    document.getElementById('int-qnum').textContent = qIdx + 1;
+    document.getElementById('int-qtotal').textContent = n;
+    document.getElementById('int-score').textContent = qCorrect;
+    document.getElementById('int-prog').style.width = pct + '%';
+    const img = document.getElementById('int-img'), fb = document.getElementById('int-img-fallback');
+    img.style.display = 'block'; fb.style.display = 'none';
+    img.src = `/dataset/${label}.png`;
+    img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; fb.textContent = label; };
+    const inp = document.getElementById('int-input');
+    inp.value = ''; inp.className = 'quiz-text-input'; inp.disabled = false;
+    document.getElementById('int-submit').disabled = false;
+    hideIntFb(); document.getElementById('int-next').classList.remove('show');
+    setTimeout(() => inp.focus(), 50);
+  }
+
+  if (qLevel === 'advanced') {
+    document.getElementById('adv-qnum').textContent = qIdx + 1;
+    document.getElementById('adv-qtotal').textContent = n;
+    document.getElementById('adv-score').textContent = qCorrect;
+    document.getElementById('adv-prog').style.width = pct + '%';
+    const el = document.getElementById('adv-target-char');
+    el.textContent = label;
+    el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+    document.getElementById('adv-target-name').textContent = labelName(label);
+    document.getElementById('adv-det-char').textContent = '—';
+    document.getElementById('adv-det-name').textContent = 'Show your hand';
+    advLocked = false;
+    hideAdvFb(); document.getElementById('adv-next').classList.remove('show');
+  }
+}
+
+/* beginner */
+function answerBeginner(chosen, correct) {
+  const opts = document.querySelectorAll('#beg-options .mcq-opt');
+  opts.forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct) b.classList.add('correct');
+    if (b.textContent === chosen && chosen !== correct) b.classList.add('wrong');
+  });
+  const ok = chosen === correct;
+  if (S.sound) ok ? playSuccessTone() : playErrorTone();
+  if (ok) qCorrect++;
+  recordAcc(quizStats, correct, ok); saveQuizStats();
+  showBegFb(ok, correct);
+  document.getElementById('beg-next').classList.add('show');
+  addHistory({ type: 'quiz', level: 'beginner', label: correct, result: ok ? 'correct' : 'wrong' });
+}
+function showBegFb(ok, correct) {
+  const fb = document.getElementById('beg-fb'), icon = document.getElementById('beg-fb-icon'), txt = document.getElementById('beg-fb-text');
+  fb.className = 'quiz-fb show ' + (ok ? 'correct' : 'wrong');
+  icon.innerHTML = ok ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+  txt.textContent = ok ? '✓ Correct!' : (S.reveal ? `✗ Wrong — correct answer is "${correct}"` : '✗ Incorrect');
+}
+function hideBegFb() { document.getElementById('beg-fb').className = 'quiz-fb'; }
+
+/* intermediate */
+function submitIntermediate() {
+  const inp = document.getElementById('int-input');
+  const val = inp.value.trim().toUpperCase();
+  if (!val) return;
+  const correct = qQueue[qIdx];
+  const ok = val === correct;
+  if (S.sound)  ok ? playSuccessTone() : playErrorTone();
+  if (ok) qCorrect++;
+  inp.className = 'quiz-text-input ' + (ok ? 'correct' : 'wrong');
+  inp.disabled = true;
+  document.getElementById('int-submit').disabled = true;
+  recordAcc(quizStats, correct, ok); saveQuizStats();
+  showIntFb(ok, correct);
+  document.getElementById('int-next').classList.add('show');
+  addHistory({ type: 'quiz', level: 'intermediate', label: correct, result: ok ? 'correct' : 'wrong' });
+}
+function showIntFb(ok, correct) {
+  const fb = document.getElementById('int-fb'), icon = document.getElementById('int-fb-icon'), txt = document.getElementById('int-fb-text');
+  fb.className = 'quiz-fb show ' + (ok ? 'correct' : 'wrong');
+  icon.innerHTML = ok ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+  txt.textContent = ok ? '✓ Correct!' : (S.reveal ? `✗ Wrong — the answer was "${correct}"` : '✗ Incorrect');
+}
+function hideIntFb() { document.getElementById('int-fb').className = 'quiz-fb'; }
+// allow Enter key to submit
+document.getElementById('int-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitIntermediate(); });
+
+/* advanced */
+function initAdvancedCam() {
+  const video = document.getElementById('adv-video');
+  navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
+  const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+  if (advSocket) advSocket.close();
+  advSocket = new WebSocket('ws://' + window.location.host + '/ws');
+  advSocket.onopen = () => {
+    ['ws-dot'].forEach(id => document.getElementById(id).className = 'ws-dot on');
+    document.getElementById('ws-label').textContent = 'Connected';
+  };
+  setInterval(() => {
+    if (advSocket && advSocket.readyState === WebSocket.OPEN && video.videoWidth && document.getElementById('page-quiz').classList.contains('active')) {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0); ctx.restore();
+      advSocket.send(canvas.toDataURL('image/jpeg', 0.5));
+    }
+  }, 200);
+  advSocket.onmessage = ev => {
+    const raw = ev.data.trim(), noHand = raw === 'No Hand' || raw === 'No_Hand' || raw === '';
+    document.getElementById('adv-det-char').textContent = noHand ? '∅' : raw;
+    document.getElementById('adv-det-name').textContent = noHand ? 'No hand detected' : labelName(raw);
+    if (!noHand && !advLocked) {
+      const target = qQueue[qIdx];
+      if (raw === target) {
+        advLocked = true; qCorrect++;
+        playSuccessTone();
+        recordAcc(quizStats, target, true); saveQuizStats();
+        showAdvFb(true, target);
+        document.getElementById('adv-next').classList.add('show');
+        addHistory({ type: 'quiz', level: 'advanced', label: target, result: 'correct' });
+      }
+    }
+  };
+}
+function showAdvFb(ok, correct) {
+  const fb = document.getElementById('adv-fb'), icon = document.getElementById('adv-fb-icon'), txt = document.getElementById('adv-fb-text');
+  fb.className = 'quiz-fb show ' + (ok ? 'correct' : 'wrong');
+  icon.innerHTML = ok ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+  txt.textContent = ok ? `✓ Correct! "${correct}" recognised.` : '';
+}
+function hideAdvFb() { document.getElementById('adv-fb').className = 'quiz-fb'; }
+
+/* quiz navigation */
+function quizNext(level) {
+  qIdx++;
+  if (qIdx >= qQueue.length) {
+    endQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+function endQuiz() {
+  ['beginner','intermediate','advanced'].forEach(l => document.getElementById('quiz-' + l).classList.remove('active'));
+  const res = document.getElementById('quiz-result');
+  res.style.display = 'flex';
+  const n = qQueue.length, pct = Math.round((qCorrect / n) * 100);
+  document.getElementById('result-score').textContent = `${qCorrect}/${n}`;
+  document.getElementById('result-sub').textContent = `${pct}% accuracy · ${qLevel} level`;
+  const ring = document.getElementById('result-ring');
+  let emoji = '🏆', cls = 'great', title = 'Excellent!', msg = 'Outstanding performance — you\'re a pro!';
+  if (pct < 70) { emoji = '💪'; cls = 'ok'; title = 'Good effort!'; msg = 'Keep practising — you\'re getting there!'; }
+  if (pct < 40) { emoji = '🔄'; cls = 'retry'; title = 'Keep going!'; msg = 'Don\'t give up — review the signs and try again.'; }
+  ring.textContent = emoji; ring.className = 'result-ring ' + cls;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-retry-btn').onclick = () => startQuiz(qLevel);
+  saveQuizScore(qCorrect, n);
+  addHistory({ type: 'quiz', level: qLevel, score: qCorrect, total: n });
+}
+function quitQuiz() {
+  if (advSocket) { advSocket.close(); advSocket = null; }
+  showQuizLobby();
+}
+
+/* ════════════════════════════════════════
+   HISTORY
+════════════════════════════════════════ */
+function renderHistory() {
+  const cont = document.getElementById('hist-container');
+  if (!HISTORY.length) {
+    cont.innerHTML = '<div class="hist-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span>No sessions yet — start practising!</span></div>';
+    return;
+  }
+  const fmt = ts => new Date(ts).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  cont.innerHTML = '<div class="hist-list">' + HISTORY.slice(0, 30).map(h => {
+    const isQuiz = h.type === 'quiz' && h.score !== undefined;
+    const isPrac = h.type === 'practice';
+    if (isQuiz) {
+      const pct = Math.round(h.score / h.total * 100);
+      return `<div class="hist-item"><div class="hist-icon quiz">🧩</div><div class="hist-meta"><div class="hist-title">Quiz · ${h.level}</div><div class="hist-sub">${fmt(h.ts)}</div></div><div class="hist-score">${h.score}/${h.total} &nbsp;<span style="color:var(--accent)">${pct}%</span><span>${h.level}</span></div></div>`;
+    }
+    if (isPrac && h.label) {
+      return `<div class="hist-item"><div class="hist-icon practice">🎯</div><div class="hist-meta"><div class="hist-title">Practice · sign "${h.label}"</div><div class="hist-sub">${fmt(h.ts)}</div></div><div class="hist-score" style="color:${h.result==='correct'?'var(--green)':'var(--red)'}">${h.result==='correct'?'✓':'✗'}<span>${h.result}</span></div></div>`;
+    }
+    return '';
+  }).join('') + '</div>';
+}
+
+/* ════════════════════════════════════════
+   STATS
+════════════════════════════════════════ */
+function renderStats() {
+  /* overview cards */
+  const totalPrac = Object.values(practiceStats).reduce((s,v) => s + v.t, 0);
+  const correctPrac = Object.values(practiceStats).reduce((s,v) => s + v.c, 0);
+  const totalQuiz = Object.values(quizStats).reduce((s,v) => s + v.t, 0);
+  const correctQuiz = Object.values(quizStats).reduce((s,v) => s + v.c, 0);
+  const practiceAcc = totalPrac ? Math.round(correctPrac / totalPrac * 100) : 0;
+  const quizAcc     = totalQuiz ? Math.round(correctQuiz / totalQuiz * 100) : 0;
+  const quizSessions = quizScores.length;
+
+  document.getElementById('stats-overview').innerHTML = `
+    <div class="stat-card"><div class="sc-label">Practice signs</div><div class="sc-val">${totalPrac}</div><div class="sc-sub">Total attempts</div></div>
+    <div class="stat-card"><div class="sc-label">Practice accuracy</div><div class="sc-val">${practiceAcc}%</div><div class="sc-sub">${correctPrac} correct</div></div>
+    <div class="stat-card"><div class="sc-label">Quiz sessions</div><div class="sc-val">${quizSessions}</div><div class="sc-sub">Completed</div></div>
+    <div class="stat-card"><div class="sc-label">Quiz accuracy</div><div class="sc-val">${quizAcc}%</div><div class="sc-sub">${correctQuiz}/${totalQuiz} correct</div></div>`;
+
+  /* bar chart — last 7 quiz scores */
+  const recent = quizScores.slice(-7);
+  const chart = document.getElementById('score-chart');
+  if (!recent.length) {
+    chart.innerHTML = '<div style="color:var(--text-muted);font-size:13px;align-self:flex-end">No quiz sessions yet</div>';
+  } else {
+    chart.innerHTML = recent.map((q, i) => {
+      const pct = Math.round(q.s / q.max * 100);
+      const h = Math.max(8, pct);
+      return `<div class="bar-col"><div class="bar" style="height:${h}px" title="${q.s}/${q.max}"></div><div class="bar-lbl">${pct}%</div></div>`;
+    }).join('');
+  }
+
+  /* sign accuracy grid — merge quiz + practice */
+  const merged = {};
+  LABELS.forEach(l => {
+    const q = quizStats[l]   || { c:0,t:0 };
+    const p = practiceStats[l] || { c:0,t:0 };
+    merged[l] = { c: q.c + p.c, t: q.t + p.t };
+  });
+  const accGrid = document.getElementById('acc-grid');
+  accGrid.innerHTML = LABELS.map(l => {
+    const { c, t } = merged[l];
+    const pct = t ? Math.round(c/t*100) : null;
+    let bg = 'var(--surface-2)', clr = 'var(--text-muted)';
+    if (pct !== null) {
+      if (pct >= 80) { bg = 'var(--green-dim)'; clr = 'var(--green)'; }
+      else if (pct >= 50) { bg = 'var(--orange-dim)'; clr = 'var(--orange)'; }
+      else { bg = 'var(--red-dim)'; clr = 'var(--red)'; }
+    }
+    return `<div class="acc-chip" style="background:${bg};border-color:${clr === 'var(--text-muted)' ? 'var(--border)' : clr.replace('var(--','var(--').replace(')','-border)')}">
+      <div class="ch-lbl" style="color:${clr}">${l}</div>
+      <div class="ch-pct">${pct !== null ? pct + '%' : '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   SOUND
+════════════════════════════════════════ */
+async function playTone(freq, dur) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // This is the "Magic Fix": Chrome starts contexts in 'suspended'
+    // even if triggered by a click. We must await the resume.
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    
+    // Smoother volume ramp to prevent "popping"
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  } catch (e) {
+    console.error("Audio failed:", e);
+  }
+}
+
+function playSuccessTone(){
+    playTone(660, 0.1);
+    setTimeout(() => playTone(880, 0.4), 100);
+}
+function playErrorTone(){
+    playTone(440, 0.1);
+    setTimeout(() => playTone(220, 0.4), 100);
+}
+
+/* init on load */
+applySettings();
+</script>
+</body>
+</html>

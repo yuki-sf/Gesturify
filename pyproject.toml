@@ -1,0 +1,24 @@
+[project]
+name = "gesturify"
+version = "0.1.0"
+description = "AI Sign Language Recognition App"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "fastapi==0.135.2",
+    "uvicorn==0.42.0",
+    "websockets==16.0",
+    "python-multipart==0.0.22",
+    "tensorflow-intel==2.12.0",
+    "keras==2.12.0",
+    "mediapipe==0.10.5",
+    "numpy==1.23.5",
+    "opencv-python==4.7.0.72",
+    "pandas==1.5.3",
+    "protobuf==3.20.3",
+]
+
+[tool.uv]
+override-dependencies = [
+    "tensorflow-io-gcs-filesystem==0.31.0"
+]
