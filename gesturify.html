@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gesturify — ISL Sign Language</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e8c547'/%3E%3Cg stroke='%2309090b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'%3E%3Cpath d='M21 13V9a2 2 0 0 0-4 0v5'/%3E%3Cpath d='M17 12V6a2 2 0 0 0-4 0v3'/%3E%3Cpath d='M13 12.5V9a2 2 0 0 0-4 0v9'/%3E%3Cpath d='M21 11a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L10 17'/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -34,8 +34,14 @@
   --wm-bg:rgba(255,255,255,.82);
 }
 
-html,body{height:100%}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;transition:background .22s,color .22s}
+html{height:100%;height:-webkit-fill-available}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;
+  height:100vh;height:-webkit-fill-available;height:100dvh;
+  overflow:hidden;transition:background .22s,color .22s;
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+}
 
 /* ── CUSTOM SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -83,7 +89,7 @@ aside.collapsed .sidebar-toggle svg{transform:rotate(180deg)}
 .sidebar-overlay.open{display:block}
 
 /* Mobile topbar */
-.mobile-topbar{display:none;height:52px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 16px;gap:12px;flex-shrink:0;position:relative;z-index:10}
+.mobile-topbar{display:none;height:52px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;padding:0 16px;padding-top:env(safe-area-inset-top);gap:12px;flex-shrink:0;position:relative;z-index:10}
 .mobile-topbar .logo-gem{width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center}
 .mobile-topbar .logo-gem svg{width:16px;height:16px}
 .mobile-topbar-name{font-size:14px;font-weight:500;letter-spacing:-.01em;flex:1}
@@ -119,11 +125,11 @@ nav{flex:1;padding:0 8px;display:flex;flex-direction:column;gap:1px;overflow-y:a
 .ws-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
 
 /* ── MAIN ── */
-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background .22s;min-width:0}
-.main-body{flex:1;display:flex;flex-direction:row;overflow:hidden;position:relative}
-.page{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background .22s;min-width:0;min-height:0}
+.main-body{flex:1;display:flex;flex-direction:row;overflow:hidden;position:relative;min-height:0}
+.page{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;min-height:0}
 .page.active{display:flex}
-.page-wrap{padding:36px 48px 52px;width:100%}
+.page-wrap{padding:36px 48px 52px;width:100%;padding-bottom:max(52px,calc(52px + env(safe-area-inset-bottom)))}
 .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:14px}
 .card-base{background:var(--surface);border:1px solid var(--border);border-radius:13px}
 .card-lbl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-family:'DM Mono',monospace}
@@ -249,7 +255,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--
 .sign-type{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);background:var(--surface-3);padding:2px 7px;border-radius:4px}
 
 /* ── QUIZ ── */
-.quiz-lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;text-align:center}
+.quiz-lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px 24px;text-align:center;min-height:0;overflow-y:auto}
 .quiz-lobby h2{font-size:28px;font-weight:300;letter-spacing:-.02em;margin-bottom:10px}
 .quiz-lobby p{font-size:14px;color:var(--text-muted);max-width:420px;line-height:1.7;margin-bottom:36px}
 .level-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:0}
@@ -267,7 +273,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--
 .lc-tag.purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
 
 /* quiz game area */
-.quiz-game{display:none;flex-direction:column;flex:1;padding:36px 48px 48px}
+.quiz-game{display:none;flex-direction:column;flex:1;padding:36px 48px 48px;overflow-y:auto;min-height:0;padding-bottom:max(48px,calc(48px + env(safe-area-inset-bottom)))}
 .quiz-game.active{display:flex}
 .quiz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
 .quiz-top h3{font-size:20px;font-weight:400;letter-spacing:-.01em}
@@ -321,7 +327,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--
 .adv-right{flex:1}
 
 /* quiz result */
-.quiz-result{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px}
+.quiz-result{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:32px 24px;min-height:0;overflow-y:auto}
 .result-ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:20px}
 .result-ring.great{background:var(--green-dim);border:2px solid var(--green-border)}
 .result-ring.ok{background:var(--orange-dim);border:2px solid var(--orange-border)}
@@ -462,8 +468,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--
   .home-cards{grid-template-columns:1fr}
   .stats-grid{grid-template-columns:1fr 1fr}
   .hero-title{font-size:32px}
-  .page-wrap{padding:20px 16px 32px}
-  .quiz-game{padding:16px 16px 28px}
+  .page-wrap{padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+  .quiz-game{padding:14px 16px calc(24px + env(safe-area-inset-bottom))}
   .level-cards{flex-direction:column;align-items:center}
   .level-card{width:100%;max-width:340px}
   .adv-target-char{width:120px;height:120px;font-size:68px}
@@ -517,7 +523,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
 <!-- Full app wrapper -->
-<div style="display:flex;flex-direction:column;width:100%;height:100%">
+<div style="display:flex;flex-direction:column;width:100%;height:100vh;height:-webkit-fill-available;height:100dvh">
 
 <!-- Mobile top bar (visible < 640px) -->
 <div class="mobile-topbar" id="mobile-topbar">
@@ -1326,7 +1332,10 @@ function initPractice() {
   practiceReady = true;
   updateProgGrid(); setTarget(pickNextSign());
   const video = document.getElementById('video');
-  navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
+  const camConstraints = { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } };
+  navigator.mediaDevices.getUserMedia(camConstraints)
+    .then(s => { video.srcObject = s; video.play().catch(() => {}); })
+    .catch(err => { console.warn('Camera:', err); document.getElementById('ws-label-2').textContent = 'Camera unavailable'; });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
 
   let pingInterval = null;
@@ -1603,7 +1612,10 @@ document.getElementById('int-input').addEventListener('keydown', e => { if (e.ke
 /* advanced */
 function initAdvancedCam() {
   const video = document.getElementById('adv-video');
-  navigator.mediaDevices.getUserMedia({ video: true }).then(s => { video.srcObject = s; });
+  const advCamConstraints = { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } };
+  navigator.mediaDevices.getUserMedia(advCamConstraints)
+    .then(s => { video.srcObject = s; video.play().catch(() => {}); })
+    .catch(err => { console.warn('Camera:', err); });
   const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
   if (advSocket) { advSocket.close(); advSocket = null; }
 
